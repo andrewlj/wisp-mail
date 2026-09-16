@@ -16,5 +16,11 @@ mail:
                             # a large backlog is worked through gradually across
                             # several runs instead of one huge run. Cached
                             # messages from a prior run don't count against this.
+  list_limit: 300           # max messages even considered per run (read + unread
+                            # by default). list_mail's AppleScript gets slower
+                            # with how much it lists (~13s at 300); a full
+                            # multi-thousand-message backlog would exceed its own
+                            # 60s timeout. No pagination yet — anything beyond
+                            # this in Mail's internal order isn't reachable.
 
 workspace: "~/wisp-mail"    # cache + logs live here, separate from wisp-agent's ~/wisp
