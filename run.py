@@ -2,18 +2,24 @@
 """
 wisp-mail — Phase 1: understand-only dry run.
 
-Fetches mail (read AND unread by default — read status is a Mail.app UI
-state, not a signal about whether something is worth classifying) and
-classifies every message that hasn't been classified before (cache hit ->
-skip the LLM call entirely). Does NOT delete, move, or otherwise act on
-anything — Phase 1's whole job is validating that classification itself
-holds up and that per-email isolation genuinely works, with zero side
-effects while that's being checked.
+Fetches ALL mail (read and unread alike — always) and classifies every
+message that hasn't been classified before (cache hit -> skip the LLM call
+entirely). Does NOT delete, move, or otherwise act on anything — Phase 1's
+whole job is validating that classification itself holds up and that
+per-email isolation genuinely works, with zero side effects while that's
+being checked.
+
+Read/unread is recorded as a plain attribute of each classified message (see
+preferences.store_classification's `unread` field) — like sender or subject,
+never a gate on whether the message gets fetched or classified in the first
+place. There is deliberately no "--unread-only" flag here: that would put
+read status back in the role of deciding what's worth understanding, which is
+exactly the wrong model (a message's read state on your phone has nothing to
+do with whether wisp-mail should have an opinion about it).
 
 Usage:
     python run.py                  # classify up to `per_run_limit` new messages
     python run.py --limit 10       # override the per-run cap for this run
-    python run.py --unread-only    # only consider unread mail
     python run.py --account you@example.com
 
 Known limitation — not yet fixed: `list_mail`'s underlying AppleScript call
@@ -92,8 +98,6 @@ def main() -> int:
                     help="override config's mail.list_limit for this run "
                          "(how many messages are even considered — see the "
                          "module docstring's known pagination limitation)")
-    ap.add_argument("--unread-only", action="store_true",
-                    help="only consider unread mail (default: read + unread)")
     args = ap.parse_args()
 
     with open(_CONFIG_PATH) as f:
@@ -104,11 +108,10 @@ def main() -> int:
     list_limit = args.list_limit if args.list_limit is not None else \
         int(mail_cfg.get("list_limit", 300))
 
-    scope = "unread mail" if args.unread_only else "mail (read + unread)"
-    print(f"fetching {scope} (account={args.account or 'all'}, "
+    print(f"fetching mail (account={args.account or 'all'}, "
           f"list_limit={list_limit})…")
     raw = mail_tools.list_mail(account=args.account, mailbox="INBOX",
-                               limit=list_limit, unread_only=args.unread_only)
+                               limit=list_limit, unread_only=False)
     rows, header_total = _parse_messages(raw)
     print(f"found {len(rows)} message(s) in the listing")
     if header_total is not None and header_total > len(rows):
@@ -133,7 +136,7 @@ def main() -> int:
         preferences.store_classification(
             message_id=mid, sender=row["sender"], subject=row["subject"],
             category=result["category"], confidence=result["confidence"],
-            reasoning=result["reasoning"])
+            reasoning=result["reasoning"], unread=row["unread"])
 
         processed += 1
         tag = "unread" if row["unread"] else "read  "

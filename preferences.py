@@ -49,16 +49,21 @@ def get_cached(message_id: str) -> dict | None:
 
 def store_classification(message_id: str, sender: str, subject: str,
                          category: str, confidence: float, reasoning: str,
+                         unread: bool | None = None,
                          status: str = "classified") -> None:
     """Persist a classification result. Permanent — content doesn't change,
     so this is never invalidated by time, only overwritten if re-stored
-    with a new status (e.g. once an action is actually taken)."""
-    import time
+    with a new status (e.g. once an action is actually taken).
+
+    `unread` is recorded as a plain attribute of the message at classification
+    time (like sender/subject) — it must never gate WHETHER a message gets
+    classified in the first place. None if the caller didn't have it."""
     from datetime import datetime
     data = {
         "message_id": message_id,
         "sender": sender,
         "subject": subject,
+        "unread": unread,
         "category": category,
         "confidence": confidence,
         "reasoning": reasoning,
