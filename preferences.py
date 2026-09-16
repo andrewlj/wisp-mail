@@ -74,6 +74,20 @@ def store_classification(message_id: str, sender: str, subject: str,
         json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def list_all() -> list[dict]:
+    """Return every cached classification, newest first. Used by status.py
+    to browse results — the cache files themselves are hash-named and not
+    meant to be read directly."""
+    records = []
+    for p in _CACHE_DIR.glob("*.json"):
+        try:
+            records.append(json.loads(p.read_text(encoding="utf-8")))
+        except Exception:
+            continue
+    records.sort(key=lambda r: r.get("classified_at", ""), reverse=True)
+    return records
+
+
 def update_status(message_id: str, status: str) -> None:
     """Update just the status field of an already-cached classification
     (e.g. 'classified' -> 'executed' once Phase 2 acts on it)."""

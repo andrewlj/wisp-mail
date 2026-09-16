@@ -91,6 +91,15 @@ python3.11 run.py --account you@example.com
 Each message prints its category, confidence, and one-line reasoning. Run it
 again and already-classified messages are skipped — no repeat LLM calls.
 
+**Browse past results** (the cache files themselves are hash-named JSON, not
+meant to be read directly):
+
+```bash
+python3.11 status.py                    # everything, grouped by category
+python3.11 status.py --category 广告推广
+python3.11 status.py --unread-only       # only messages that were unread when classified
+```
+
 ## Project structure
 
 ```
@@ -106,6 +115,7 @@ wisp-mail/
 ├── preferences.py      # classification cache (Phase 1); rule table +
 │                       # candidate-review queue land in Phase 2
 ├── run.py              # entry point — what launchd will eventually call
+├── status.py            # browse cached classification results
 ├── config.yaml          # server/model/telegram config (git-ignored)
 ├── config.example.yaml  # config template
 ├── requirements.txt
