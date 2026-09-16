@@ -1,0 +1,20 @@
+server:
+  base_url: "http://127.0.0.1:8000/v1/chat/completions"
+  api_key: "your-api-key"
+
+model:
+  name: "your-model-name"   # e.g. Qwen3.5-9B-MLX-8bit — same local server wisp-agent uses
+
+# Optional — one-way push of run reports. wisp-mail never reads replies or
+# polls; this is send-only (unlike wisp-agent's bidirectional gateway).
+telegram:
+  bot_token: ""             # from @BotFather — can reuse wisp-agent's bot
+  user_id: 0                # your numeric id (from @userinfobot)
+
+mail:
+  per_run_limit: 50         # max NEW (uncached) messages to classify per run —
+                            # a large backlog is worked through gradually across
+                            # several runs instead of one huge run. Cached
+                            # messages from a prior run don't count against this.
+
+workspace: "~/wisp-mail"    # cache + logs live here, separate from wisp-agent's ~/wisp
